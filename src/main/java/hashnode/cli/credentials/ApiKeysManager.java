@@ -4,12 +4,17 @@ import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 
 public class ApiKeysManager {
 
-    public static Key generateKey(String password) {
-        return new SecretKeySpec(password.getBytes(), "AES");
+    public static Key generateKey(String password) throws Exception{
+        MessageDigest digest = MessageDigest.getInstance("SHA-256");
+        byte[] sha256 = org.apache.commons.codec.digest.DigestUtils.sha3_256(password);
+
+        return new SecretKeySpec(sha256, "AES");
     }
 
     public static String encrypt(String apiKey, Key key) throws Exception {
