@@ -2,8 +2,9 @@ package hashnode.cli.commands.create;
 
 import picocli.CommandLine;
 
-@CommandLine.Command(name = "list", description = "Create posts, drafts, series or sessions", subcommands = {
-    CreateSessionCommand.class,
+@CommandLine.Command(name = "create", description = "Create posts, drafts, series or sessions", subcommands = {
+        CreateSessionCommand.class,
+        CreatePostCommand.class,
 })
 public class CreateCommand implements Runnable {
     @Override

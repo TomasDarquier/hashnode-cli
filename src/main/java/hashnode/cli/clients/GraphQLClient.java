@@ -1,8 +1,10 @@
 package hashnode.cli.clients;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import hashnode.cli.models.Root;
 import okhttp3.*;
 
 import java.io.IOException;
@@ -13,7 +15,7 @@ public class GraphQLClient {
     private static final OkHttpClient client = new OkHttpClient();
     private static final Gson gson = new Gson();
 
-   public static JsonObject executeMutation(
+   protected static Root executeAPICall(
             String query,
             JsonObject variables,
             String authToken
@@ -35,7 +37,8 @@ public class GraphQLClient {
             if(!response.isSuccessful()){
                 throw new IOException("Error in the communication with the Hashnode API: \n" + response);
             }
-            return JsonParser.parseString(response.body().string()).getAsJsonObject();
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(response.body().string(), Root.class);
         }
     }
 }

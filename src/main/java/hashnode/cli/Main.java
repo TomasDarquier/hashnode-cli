@@ -1,19 +1,23 @@
 package hashnode.cli;
 
+import hashnode.cli.commands.create.CreateCommand;
 import hashnode.cli.commands.list.ListCommand;
-import hashnode.cli.commands.session.SessionCommand;
 import hashnode.cli.credentials.SessionsManager;
 import picocli.CommandLine;
 
 import java.io.IOException;
 
-@CommandLine.Command(name = "hashnode-cli", mixinStandardHelpOptions = true, subcommands = {
-        ListCommand.class,
-        SessionCommand.class,
+@CommandLine.Command(
+        name = "hashnode-cli",
+        mixinStandardHelpOptions = true,
+        subcommands = {
+                CreateCommand.class,
+                ListCommand.class,
+//        SessionCommand.class,
 //        AddCommand.class,
 //        EditCommand.class,
 //        DeleteCommand.class
-})
+        })
 public class Main implements Runnable {
     @Override
     public void run() {
