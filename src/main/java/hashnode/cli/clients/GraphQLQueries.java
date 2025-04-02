@@ -5,7 +5,8 @@ import hashnode.cli.models.Publications;
 import hashnode.cli.models.Root;
 
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.AbstractMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GraphQLQueries {
@@ -37,7 +38,8 @@ public class GraphQLQueries {
     }
 
 
-    public static ArrayList<String> getSeries(String authToken, String host) throws IOException {
+    public static Map<String,String> getSeries(String authToken, String host) throws IOException {
+        System.out.println("HOST: " + host);
         String query = """
                 query Publication(
                   $host: String,
@@ -50,6 +52,7 @@ public class GraphQLQueries {
                       edges{
                         node{
                           name
+                          id
                         }
                       }
                     }
@@ -63,9 +66,14 @@ public class GraphQLQueries {
 
         Root root = GraphQLClient.executeAPICall(query, variables, authToken);
 
-        return root.data.publication.seriesList.edges
+        Map<String, String> list = root.data.publication.seriesList.edges
                 .stream()
-                .map(edge -> edge.node.name)
-                .collect(Collectors.toCollection(ArrayList::new));
+                .map(edge -> new AbstractMap.SimpleEntry<>(
+                        edge.node.name,
+                        edge.node.id
+                ))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        return list;
     }
 }

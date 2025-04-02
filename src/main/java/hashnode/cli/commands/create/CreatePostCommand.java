@@ -1,19 +1,18 @@
 package hashnode.cli.commands.create;
 
+import hashnode.cli.clients.GraphQLMutations;
 import hashnode.cli.clients.GraphQLQueries;
 import hashnode.cli.credentials.ApiKeysManager;
 import hashnode.cli.credentials.SessionsManager;
 import hashnode.cli.models.Edge;
 import hashnode.cli.models.Node;
-import hashnode.cli.models.Publications;
+import hashnode.cli.models.Series;
 import picocli.CommandLine;
 
 import javax.crypto.BadPaddingException;
 import java.io.IOException;
 import java.security.Key;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Scanner;
+import java.util.*;
 
 @CommandLine.Command(name = "post", description = "Uploads a new post to your blog")
 public class CreatePostCommand implements Runnable {
@@ -37,11 +36,11 @@ public class CreatePostCommand implements Runnable {
 
             Node blog = selectBlog(apiKey);
             if(blog == null) return;
+            String publicationId = blog.id;
 
-            // TODO Manage series
-            boolean useSeries = true;
-            String series = selectSeries(blog.url , apiKey);
-            if(series == null || series.isBlank()) useSeries = false;
+            String seriesId = selectSeries(blog.url, apiKey, publicationId);
+            boolean useSeries = seriesId != null && !seriesId.isBlank();
+            System.out.println("SERIES ID: " + seriesId);
 
             // Check how to read a file from a relative path
             // Make post
@@ -52,8 +51,60 @@ public class CreatePostCommand implements Runnable {
         }
     }
 
-    private String selectSeries(String host, String apiKey) {
-        //TODO implement method
+    private String selectSeries(String host, String apiKey, String publicationId) {
+        try {
+            Map<String,String> series = GraphQLQueries.getSeries(apiKey, host.substring(host.indexOf("//")+2));
+            int aux = 0;
+            String[] seriesNames = series.keySet().toArray(new String[0]);
+            if(series.isEmpty()){
+                System.out.println("No series found. Please, select an option:");
+            }else {
+                for(String s : seriesNames){
+                    System.out.printf("[%d] %s\n", aux + 1, s);
+                    aux++;
+                }
+            }
+            System.out.printf("[%d] %s", aux++ + 1, "Create new Series\n");
+            System.out.printf("[%d] %s", aux + 1, "Post blog without Series\n");
+
+            int selectedOption;
+            do {
+                selectedOption = sc.nextInt();
+                if (selectedOption < 1 || selectedOption > series.size() + 2) {
+                    System.err.println("Please select a valid Series.\n");
+                }
+            } while (selectedOption < 1 || selectedOption > series.size() + 2);
+
+            if(series.isEmpty() ) {
+                return selectedOption == 1 ?
+                    createSeries(publicationId, apiKey) : null;
+            }
+            if(selectedOption > series.size()) {
+                return selectedOption == series.size() + 1?
+                        createSeries(publicationId, apiKey) : null;
+            }
+            return series.get(seriesNames[selectedOption - 1]);
+        } catch (IOException e) {
+            System.err.println("Error getting Series\n");
+        }
+        return null;
+    }
+
+    private String createSeries(String publicationId, String apiKey){
+        System.out.println("Creating new Series...");
+        System.out.println("Please, write de Series name:");
+        String name = sc.nextLine().trim();
+        String slug = name.replaceAll("[^a-zA-Z0-9]", "-");
+        Series createdSeries;
+        try {
+            createdSeries = GraphQLMutations.createNewSeries(name, slug, publicationId, apiKey);
+            return createdSeries.id;
+
+        } catch (IOException e) {
+            //TODO
+            //throw an exception to stop de blog post process
+            System.err.println("Error creating new Series\n");
+        }
         return null;
     }
 
@@ -67,14 +118,14 @@ public class CreatePostCommand implements Runnable {
         }
 
         if (edges.size() == 1) {
-            System.out.printf("You have only one blog.\n%s has been selected by default%n",
+            System.out.printf("You have only one blog.\n%s has been selected by default%n\n",
                     edges.get(0).node.url);
             return edges.get(0).node;
         }
 
         System.out.println("Please, select a blog:");
         for (int i = 0; i < edges.size(); i++) {
-            System.out.printf("[%d] %s", i + 1, edges.get(i).node.url);
+            System.out.printf("[%d] %s\n", i + 1, edges.get(i).node.url);
         }
 
         int selectedOption;
