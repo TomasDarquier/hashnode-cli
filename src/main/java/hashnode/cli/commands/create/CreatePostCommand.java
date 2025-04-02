@@ -6,11 +6,15 @@ import hashnode.cli.credentials.ApiKeysManager;
 import hashnode.cli.credentials.SessionsManager;
 import hashnode.cli.models.Edge;
 import hashnode.cli.models.Node;
+import hashnode.cli.models.PublishPost;
 import hashnode.cli.models.Series;
 import picocli.CommandLine;
 
 import javax.crypto.BadPaddingException;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.security.Key;
 import java.util.*;
 
@@ -23,7 +27,7 @@ public class CreatePostCommand implements Runnable {
     String title;
     @CommandLine.Option(names = {"--subtitle"}, description = "Post subtitle", required = false)
     String subtitle;
-    @CommandLine.Option(names = {"-c", "--content"}, description = "Post markdown content", required = true)
+    @CommandLine.Option(names = {"-c", "--content"}, description = "Post content (file)", required = true)
     String blogContent;
     @CommandLine.Option(names = {"-b", "--banner"}, description = "Banner Image", required = false)
     String bannerImage;
@@ -31,6 +35,10 @@ public class CreatePostCommand implements Runnable {
     @Override
     public void run() {
         try {
+
+            boolean subtitleExists = subtitle != null && !subtitle.isEmpty();
+            boolean bannerExists = bannerImage != null && !bannerImage.isEmpty();
+
             String apiKey = validateSession();
             if(apiKey == null) return;
 
@@ -39,14 +47,52 @@ public class CreatePostCommand implements Runnable {
             String publicationId = blog.id;
 
             String seriesId = selectSeries(blog.url, apiKey, publicationId);
-            boolean useSeries = seriesId != null && !seriesId.isBlank();
-            System.out.println("SERIES ID: " + seriesId);
+            boolean seriesExists = seriesId != null && !seriesId.isBlank();
 
-            // Check how to read a file from a relative path
-            // Make post
+            String content = readMdFile(blogContent);
+            if(content == null) return;
+
+            // TODO, add images functionality
+            PublishPost post = GraphQLMutations.createNewPost(
+                    apiKey,
+                    publicationId,
+                    title,
+                    content,
+                    subtitleExists,
+                    subtitle,
+                    bannerExists,
+                    bannerImage,
+                    seriesExists,
+                    seriesId);
+
+            System.out.println("Post successfully created!");
+            System.out.println("Post Info: ");
+            System.out.println("Title: " + post.post.title);
+            if(subtitleExists) System.out.println("Subtitle: " + post.post.subtitle);
+            System.out.println("Url: " + post.post.url);
+            System.out.println("Read Time in Minutes: " + post.post.readTimeInMinutes + "min");
+            if(seriesExists) System.out.println("Series: " + post.post.series.name);
+            System.out.println("Brief: " + post.post.brief);
+            System.out.println("Published At: " + post.post.publishedAt);
+
         } catch (BadPaddingException e){
             System.err.println("Wrong password");
         } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private String readMdFile(String blogContent) {
+        Path path = Paths.get(blogContent);
+        if (!Files.exists(path)) {
+            System.err.println("File does not exist");
+            return null;
+        }
+
+        try {
+            return Files.readString(path);
+        } catch (
+                IOException e) {
             throw new RuntimeException(e);
         }
     }
@@ -70,6 +116,7 @@ public class CreatePostCommand implements Runnable {
             int selectedOption;
             do {
                 selectedOption = sc.nextInt();
+                sc.nextLine(); //to clean the scanner
                 if (selectedOption < 1 || selectedOption > series.size() + 2) {
                     System.err.println("Please select a valid Series.\n");
                 }
@@ -94,12 +141,17 @@ public class CreatePostCommand implements Runnable {
         System.out.println("Creating new Series...");
         System.out.println("Please, write de Series name:");
         String name = sc.nextLine().trim();
-        String slug = name.replaceAll("[^a-zA-Z0-9]", "-");
+        String slug = name.replaceAll("[^a-zA-Z0-9]", "-").toLowerCase();
+        System.out.println("Slug: " + slug);
         Series createdSeries;
         try {
             createdSeries = GraphQLMutations.createNewSeries(name, slug, publicationId, apiKey);
+            System.out.println(
+                    "Series " + createdSeries.name +
+                    " created at: " +
+                    createdSeries.createdAt
+            );
             return createdSeries.id;
-
         } catch (IOException e) {
             //TODO
             //throw an exception to stop de blog post process

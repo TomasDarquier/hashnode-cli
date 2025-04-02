@@ -13,21 +13,21 @@ public class GraphQLQueries {
 
     public static Publications getPublications(String authToken) throws IOException {
         String query = """
-                query Me ($first:Int!){
-                  me {
-                    id
-                    username
-                    name
-                    publications(first:$first){
-                      edges{
-                        node{
-                          id
-                          url
+                    query Me ($first:Int!){
+                      me {
+                        id
+                        username
+                        name
+                        publications(first:$first){
+                          edges{
+                            node{
+                              id
+                              url
+                            }
+                          }
                         }
                       }
                     }
-                  }
-                }
                 """;
         JsonObject variables = new JsonObject();
         variables.addProperty("first", 20);
@@ -41,25 +41,24 @@ public class GraphQLQueries {
     public static Map<String,String> getSeries(String authToken, String host) throws IOException {
         System.out.println("HOST: " + host);
         String query = """
-                query Publication(
-                  $host: String,
-                  $first: Int!
-                ) {
-                  publication(
-                    host: $host
-                  ) {
-                    seriesList(first: $first){
-                      edges{
-                        node{
-                          name
-                          id
+                    query Publication(
+                      $host: String,
+                      $first: Int!
+                    ) {
+                      publication(
+                        host: $host
+                      ) {
+                        seriesList(first: $first){
+                          edges{
+                            node{
+                              name,
+                              id
+                            }
+                          }
                         }
                       }
                     }
-                  }
-                }
                 """;
-
         JsonObject variables = new JsonObject();
         variables.addProperty("first", 20);
         variables.addProperty("host", host);
