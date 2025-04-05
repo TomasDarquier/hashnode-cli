@@ -1,7 +1,10 @@
 package hashnode.cli.models;
 
+import lombok.Data;
+
 import java.util.Date;
 
+@Data
 public class Post {
     public String title;
     public String subtitle;

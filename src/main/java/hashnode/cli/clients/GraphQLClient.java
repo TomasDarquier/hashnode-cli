@@ -15,7 +15,7 @@ public class GraphQLClient {
     private static final OkHttpClient client = new OkHttpClient();
     private static final Gson gson = new Gson();
 
-   protected static Root executeAPICall(
+   public static Root executeAPICall(
             String query,
             JsonObject variables,
             String authToken
@@ -26,12 +26,15 @@ public class GraphQLClient {
         requestJson.add("variables", variables);
 
         RequestBody requestBody = RequestBody.create(requestJson.toString(), MediaType.parse("application/json"));
-        Request request = new Request.Builder()
-                .url(HASHNODE_API)
-                .post(requestBody)
-                .addHeader("Authorization", authToken)
-                .addHeader("Content-Type", "application/json")
-                .build();
+       Request request = new Request.Builder()
+               .url(HASHNODE_API)
+               .post(requestBody)
+               .header("Cache-Control", "no-cache, no-store, must-revalidate")
+               .header("Pragma", "no-cache")
+               .header("Expires", "0")
+               .addHeader("Authorization", authToken)
+               .addHeader("Content-Type", "application/json")
+               .build();
 
         try(Response response = client.newCall(request).execute()){
             if(!response.isSuccessful()){

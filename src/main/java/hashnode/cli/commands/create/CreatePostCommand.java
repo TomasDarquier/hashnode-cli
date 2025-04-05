@@ -44,9 +44,9 @@ public class CreatePostCommand implements Runnable {
 
             Node blog = selectBlog(apiKey);
             if(blog == null) return;
-            String publicationId = blog.id;
+            String publicationId = blog.getId();
 
-            String seriesId = selectSeries(blog.url, apiKey, publicationId);
+            String seriesId = selectSeries(blog.getUrl(), apiKey, publicationId);
             boolean seriesExists = seriesId != null && !seriesId.isBlank();
 
             String content = readMdFile(blogContent);
@@ -67,13 +67,13 @@ public class CreatePostCommand implements Runnable {
 
             System.out.println("Post successfully created!");
             System.out.println("Post Info: ");
-            System.out.println("Title: " + post.post.title);
-            if(subtitleExists) System.out.println("Subtitle: " + post.post.subtitle);
-            System.out.println("Url: " + post.post.url);
-            System.out.println("Read Time in Minutes: " + post.post.readTimeInMinutes + "min");
-            if(seriesExists) System.out.println("Series: " + post.post.series.name);
-            System.out.println("Brief: " + post.post.brief);
-            System.out.println("Published At: " + post.post.publishedAt);
+            System.out.println("Title: " + post.getPost().getTitle());
+            if(subtitleExists) System.out.println("Subtitle: " + post.getPost().getSubtitle());
+            System.out.println("Url: " + post.getPost().getUrl());
+            System.out.println("Read Time in Minutes: " + post.getPost().getReadTimeInMinutes() + "min");
+            if(seriesExists) System.out.println("Series: " + post.getPost().getSeries().getName());
+            System.out.println("Brief: " + post.getPost().getBrief());
+            System.out.println("Published At: " + post.getPost().getPublishedAt());
 
         } catch (BadPaddingException e){
             System.err.println("Wrong password");
@@ -147,11 +147,11 @@ public class CreatePostCommand implements Runnable {
         try {
             createdSeries = GraphQLMutations.createNewSeries(name, slug, publicationId, apiKey);
             System.out.println(
-                    "Series " + createdSeries.name +
+                    "Series " + createdSeries.getName() +
                     " created at: " +
-                    createdSeries.createdAt
+                    createdSeries.getCreatedAt()
             );
-            return createdSeries.id;
+            return createdSeries.getId();
         } catch (IOException e) {
             //TODO
             //throw an exception to stop de blog post process
@@ -161,7 +161,7 @@ public class CreatePostCommand implements Runnable {
     }
 
     private Node selectBlog(String apiKey) throws IOException {
-        ArrayList<Edge> edges = GraphQLQueries.getPublications(apiKey).edges;
+        ArrayList<Edge> edges = GraphQLQueries.getPublications(apiKey).getEdges();
 
         if (edges.isEmpty()) {
             System.err.println("Your credential is not attached to any blog.\n" +
@@ -171,13 +171,13 @@ public class CreatePostCommand implements Runnable {
 
         if (edges.size() == 1) {
             System.out.printf("You have only one blog.\n%s has been selected by default%n\n",
-                    edges.get(0).node.url);
-            return edges.get(0).node;
+                    edges.get(0).getNode().getUrl());
+            return edges.get(0).getNode();
         }
 
         System.out.println("Please, select a blog:");
         for (int i = 0; i < edges.size(); i++) {
-            System.out.printf("[%d] %s\n", i + 1, edges.get(i).node.url);
+            System.out.printf("[%d] %s\n", i + 1, edges.get(i).getNode().getUrl());
         }
 
         int selectedOption;
@@ -188,7 +188,7 @@ public class CreatePostCommand implements Runnable {
             }
         } while (selectedOption < 1 || selectedOption > edges.size());
 
-        return edges.get(selectedOption - 1).node;
+        return edges.get(selectedOption - 1).getNode();
     }
 
     private String validateSession() throws Exception {

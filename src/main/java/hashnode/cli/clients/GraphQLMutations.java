@@ -30,7 +30,7 @@ public class GraphQLMutations {
         variables.add("input", input);
 
         Root root = GraphQLClient.executeAPICall(query,variables,apiToken);
-        return root.data.createSeries.series;
+        return root.getData().getCreateSeries().getSeries();
     }
 
     public static PublishPost createNewPost(
@@ -78,6 +78,6 @@ public class GraphQLMutations {
         variables.add("input", input);
 
         Root root = GraphQLClient.executeAPICall(query,variables,apiToken);
-        return root.data.publishPost;
+        return root.getData().getPublishPost();
     }
 }
