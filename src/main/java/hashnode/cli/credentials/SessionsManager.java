@@ -16,11 +16,12 @@ public class SessionsManager {
     private static final Path SESSIONS_PATH = HASHNODE_PATH.resolve("sessions");
 
     public static void createSessionsPath() throws IOException {
-        if(Files.exists(SESSIONS_PATH)) {
-            return;
+        if(!Files.exists(SESSIONS_PATH)) {
+            Files.createDirectory(SESSIONS_PATH);
         }
-        Files.createDirectory(HASHNODE_PATH);
-        Files.createDirectory(SESSIONS_PATH);
+        if(!Files.exists(HASHNODE_PATH)) {
+            Files.createDirectory(HASHNODE_PATH);
+        }
     }
 
     public static String[] getSessions() throws IOException {
