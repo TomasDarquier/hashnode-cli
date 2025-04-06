@@ -1,9 +1,7 @@
 package hashnode.cli.clients;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
 import hashnode.cli.models.Root;
 import okhttp3.*;
 
@@ -13,7 +11,6 @@ public class GraphQLClient {
 
     private static final String HASHNODE_API = "https://gql.hashnode.com";
     private static final OkHttpClient client = new OkHttpClient();
-    private static final Gson gson = new Gson();
 
    public static Root executeAPICall(
             String query,
