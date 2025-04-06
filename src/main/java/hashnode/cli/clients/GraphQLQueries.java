@@ -38,7 +38,6 @@ public class GraphQLQueries {
     }
 
     public static Map<String,String> getSeries(String authToken, String host) throws IOException {
-        System.out.println("HOST: " + host);
         String query = """
                     query Publication(
                       $host: String,
